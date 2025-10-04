@@ -6,6 +6,13 @@ const app = express();
 app.use(express.json());
 app.use("/api", routes);
 
+// ✅ Test-only route to trigger middleware
+if (process.env.NODE_ENV === "test") {
+  app.get("/error", (req, res, next) => {
+    next(new Error("boom"));
+  });
+}
+
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err);

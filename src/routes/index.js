@@ -13,4 +13,8 @@ router.get("/employees/:id", employeeController.getOne);
 
 router.post("/leave-requests", leaveController.create);
 
+const queueController = require("../controllers/queueController");
+router.get("/health", queueController.health);
+
+
 module.exports = router;

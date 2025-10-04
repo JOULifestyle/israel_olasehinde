@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "db:migrate": "dotenv -e .env -- npx sequelize-cli db:migrate --config src/config/sequelizeconfig.js --migrations-path src/migrations",
+    "db:migrate:undo": "dotenv -e .env -- npx sequelize-cli db:migrate:undo --config src/config/sequelizeconfig.js --migrations-path src/migrations",
+    "db:seed": "dotenv -e .env -- npx sequelize-cli db:seed:all --config src/config/sequelizeconfig.js --seeders-path src/seeders",
+    "db:seed:undo": "dotenv -e .env -- npx sequelize-cli db:seed:undo:all --config src/config/sequelizeconfig.js --seeders-path src/seeders",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "worker": "node src/workers/leaveConsumer.js",
@@ -21,6 +25,7 @@
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
+    "dotenv-cli": "^10.0.0",
     "jest": "^30.2.0",
     "nodemon": "^3.1.10",
     "sequelize-cli": "^6.6.3",
