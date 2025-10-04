@@ -1,7 +1,7 @@
 🧭 Workforce Management System
 
-[![CI](https://github.com/JOULifestyle/workforce-management/actions/workflows/ci.yml/badge.svg)](https://github.com/JOULifestyle/workforce-management/actions)
-[![codecov](https://codecov.io/gh/JOULifestyle/workforce-management/branch/main/graph/badge.svg?token=YOUR_TOKEN)](https://codecov.io/gh/JOULifestyle/workforce-management)
+[![CI](https://github.com/JOULifestyle/workforce-management-system/actions/workflows/ci.yml/badge.svg)](https://github.com/JOULifestyle/workforce-management-system/actions)
+[![codecov](https://codecov.io/gh/JOULifestyle/workforce-management-system/branch/main/graph/badge.svg?token=186099bf-4d41-4e6f-b751-5283604fcad5)](https://codecov.io/gh/JOULifestyle/workforce-management-system)
 [![Code Style](https://img.shields.io/badge/code%20style-Prettier-orange)](#)
 [![Lint](https://img.shields.io/badge/lint-ESLint-blueviolet)](#)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-blue)](#)
@@ -71,7 +71,7 @@ tests/
 
 ⚙️ Installation & Setup
 1. Clone the Repository
-git clone https://github.com/your-username/workforce-management.git
+git clone https://github.com/JOULifestyle/workforce-management-system.git
 cd workforce-management
 
 2. Install Dependencies
