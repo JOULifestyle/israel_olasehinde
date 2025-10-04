@@ -1,13 +1,12 @@
-// jest.config.cjs
 module.exports = {
   testEnvironment: "node",
-  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+  setupFiles: ["<rootDir>/jest.setup.js"], // runs before any module
   testTimeout: 20000,
-   coverageDirectory: "coverage",
+  coverageDirectory: "coverage",
   collectCoverageFrom: [
     "src/**/*.js",
-    "!src/models/index.js",   // exclude boilerplate
-    "!src/server.js",         // exclude entrypoint
+    "!src/models/index.js",
+    "!src/server.js",
   ],
   coverageThreshold: {
     global: {

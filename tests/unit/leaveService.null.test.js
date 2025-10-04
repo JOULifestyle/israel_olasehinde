@@ -1,4 +1,6 @@
-// tests/unit/leaveService.null.test.js
+// Mock amqplib first
+jest.mock("amqplib");
+
 const leaveService = require("../../src/services/leaveService");
 const leaveRepository = require("../../src/repositories/leaveRepository");
 

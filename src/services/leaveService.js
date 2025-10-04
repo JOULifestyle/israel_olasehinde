@@ -4,26 +4,29 @@ const amqp = require("amqplib");
 exports.createLeaveRequest = async (data) => {
   const leave = await leaveRepository.create(data);
 
+  if (!leave) return null;
+
+  let connection;
+  let channel;
+  const queue = "leave.requested";
+
   try {
-    const connection = await amqp.connect(process.env.RABBITMQ_URL || "amqp://localhost");
-    const channel = await connection.createChannel();
-    const queue = "leave.requested";
+    connection = await amqp.connect(process.env.RABBITMQ_URL || "amqp://localhost");
+    channel = await connection.createChannel();
 
     await channel.assertQueue(queue, { durable: true });
     channel.sendToQueue(queue, Buffer.from(JSON.stringify(leave)), { persistent: true });
 
-    // Close safely if methods exist (some Jest mocks omit them)
-    if (channel.close) await channel.close().catch(() => {});
-    if (connection.close) await connection.close().catch(() => {});
-
     console.log("📤 Leave request published to queue");
   } catch (err) {
     console.error("❌ Failed to publish to RabbitMQ:", err.message);
-    // Don’t return a different object, just tag the existing one
     leave.publishError = err.message;
+  } finally {
+    if (channel && channel.close) await channel.close().catch(() => {});
+    if (connection && connection.close) await connection.close().catch(() => {});
   }
 
-  return leave; // always return a leave with status: "PENDING"
+  return leave;
 };
 
 exports.updateLeaveStatus = (id, status) =>

@@ -8,39 +8,111 @@ describe("Retry strategies", () => {
   beforeEach(() => {
     ack.mockClear();
     nack.mockClear();
+    jest.useRealTimers();
   });
 
-  test("noRetry calls nack on failure", async () => {
-    const handler = jest.fn().mockRejectedValue(new Error("fail"));
-    const wrapped = noRetry(handler);
+  describe("noRetry", () => {
+    test("calls nack on failure", async () => {
+      const handler = jest.fn().mockRejectedValue(new Error("fail"));
+      const wrapped = noRetry(handler);
 
-    await wrapped(msg, ack, nack);
+      await wrapped(msg, ack, nack);
 
-    expect(handler).toHaveBeenCalled();
-    expect(ack).not.toHaveBeenCalled();
-    expect(nack).toHaveBeenCalled();
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(ack).not.toHaveBeenCalled();
+      expect(nack).toHaveBeenCalledTimes(1);
+    });
+
+    test("calls ack on success", async () => {
+      const handler = jest.fn().mockResolvedValue("ok");
+      const wrapped = noRetry(handler);
+
+      await wrapped(msg, ack, nack);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(ack).toHaveBeenCalledTimes(1);
+      expect(nack).not.toHaveBeenCalled();
+    });
   });
 
-  test("fixedRetry retries 3 times then nacks", async () => {
-    const handler = jest.fn().mockRejectedValue(new Error("fail"));
-    const wrapped = fixedRetry(handler, { retries: 3, delay: 10 });
+  describe("fixedRetry", () => {
+    jest.useFakeTimers();
 
-    await wrapped(msg, ack, nack);
+    test("retries correct number of times and nacks if all fail", async () => {
+      const handler = jest.fn().mockRejectedValue(new Error("fail"));
+      const wrapped = fixedRetry(handler, { retries: 3, delay: 10 });
 
-    expect(handler).toHaveBeenCalledTimes(3);
-    expect(nack).toHaveBeenCalled();
+      const promise = wrapped(msg, ack, nack);
+
+      // advance timers for retries
+      for (let i = 0; i < 3; i++) {
+        jest.advanceTimersByTime(10);
+        await Promise.resolve();
+      }
+
+      await promise;
+
+      expect(handler).toHaveBeenCalledTimes(3);
+      expect(nack).toHaveBeenCalledTimes(1);
+      expect(ack).not.toHaveBeenCalled();
+    });
+
+    test("succeeds if a retry succeeds", async () => {
+      const handler = jest
+        .fn()
+        .mockRejectedValueOnce(new Error("fail"))
+        .mockResolvedValueOnce("ok");
+      const wrapped = fixedRetry(handler, { retries: 3, delay: 10 });
+
+      const promise = wrapped(msg, ack, nack);
+      jest.advanceTimersByTime(10);
+      await Promise.resolve();
+      await promise;
+
+      expect(handler).toHaveBeenCalledTimes(2);
+      expect(ack).toHaveBeenCalledTimes(1);
+      expect(nack).not.toHaveBeenCalled();
+    });
   });
 
-  test("exponentialRetry succeeds on second try", async () => {
-    const handler = jest
-      .fn()
-      .mockRejectedValueOnce(new Error("first fail"))
-      .mockResolvedValueOnce("success");
-    const wrapped = exponentialRetry(handler, { retries: 3, baseDelay: 10 });
+  describe("exponentialRetry", () => {
+    jest.useFakeTimers();
 
-    await wrapped(msg, ack, nack);
+    test("retries with exponential backoff and succeeds", async () => {
+      const handler = jest
+        .fn()
+        .mockRejectedValueOnce(new Error("first fail"))
+        .mockResolvedValueOnce("success");
+      const wrapped = exponentialRetry(handler, { retries: 3, baseDelay: 10 });
 
-    expect(handler).toHaveBeenCalledTimes(2);
-    expect(nack).not.toHaveBeenCalled();
+      const promise = wrapped(msg, ack, nack);
+
+      jest.advanceTimersByTime(10); // first retry
+      await Promise.resolve();
+
+      await promise;
+
+      expect(handler).toHaveBeenCalledTimes(2);
+      expect(ack).toHaveBeenCalled();
+      expect(nack).not.toHaveBeenCalled();
+    });
+
+    test("fails all retries and nacks", async () => {
+      const handler = jest.fn().mockRejectedValue(new Error("fail"));
+      const wrapped = exponentialRetry(handler, { retries: 3, baseDelay: 10 });
+
+      const promise = wrapped(msg, ack, nack);
+
+      jest.advanceTimersByTime(10); // attempt 1
+      jest.advanceTimersByTime(20); // attempt 2 (10*2)
+      jest.advanceTimersByTime(40); // attempt 3 (10*2^2)
+      await Promise.resolve();
+
+      await promise;
+
+      expect(handler).toHaveBeenCalledTimes(3);
+      expect(nack).toHaveBeenCalled();
+      expect(ack).not.toHaveBeenCalled();
+    });
   });
 });

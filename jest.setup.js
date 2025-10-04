@@ -1,3 +1,5 @@
 // jest.setup.js
 process.env.NODE_ENV = "test";
-// increase stack traces or any global test setup if needed
+
+// Silence dotenv logs
+process.env.DOTENV_LOG_LEVEL = "silent";

@@ -1,4 +1,3 @@
-// tests/integration/queue.publish.test.js
 jest.mock("amqplib");
 
 const amqp = require("amqplib");
@@ -7,17 +6,23 @@ const { app, initDB } = require("../../src/app");
 const { sequelize } = require("../../src/models");
 
 let sendToQueueMock;
+let closeChannelMock;
+let closeConnectionMock;
 
 beforeAll(async () => {
   process.env.NODE_ENV = "test";
-  // mock behavior
+
   sendToQueueMock = jest.fn();
+  closeChannelMock = jest.fn().mockResolvedValue();
+  closeConnectionMock = jest.fn().mockResolvedValue();
+
   amqp.connect.mockResolvedValue({
     createChannel: async () => ({
-      assertQueue: jest.fn(),
+      assertQueue: jest.fn().mockResolvedValue(),
       sendToQueue: sendToQueueMock,
-      close: jest.fn(),
+      close: closeChannelMock,
     }),
+    close: closeConnectionMock,
   });
 
   await initDB();
@@ -30,7 +35,10 @@ afterAll(async () => {
 
 test("creating a leave request publishes message to RabbitMQ", async () => {
   // create department
-  const depRes = await request(app).post("/api/departments").send({ name: "HR" }).expect(201);
+  const depRes = await request(app)
+    .post("/api/departments")
+    .send({ name: "HR" })
+    .expect(201);
   const dep = depRes.body.data;
 
   // create employee
