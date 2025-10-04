@@ -3,6 +3,13 @@ const Department = require("./Department");
 const Employee = require("./Employee");
 const LeaveRequest = require("./LeaveRequest");
 
+// Associations
+Department.hasMany(Employee, { foreignKey: "departmentId" });
+Employee.belongsTo(Department, { foreignKey: "departmentId" });
+
+Employee.hasMany(LeaveRequest, { foreignKey: "employeeId" });
+LeaveRequest.belongsTo(Employee, { foreignKey: "employeeId" });
+
 const initDB = async () => {
   try {
     await sequelize.authenticate();

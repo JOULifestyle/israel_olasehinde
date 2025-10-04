@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "worker": "node src/workers/leaveConsumer.js",
+    "test": "cross-env NODE_ENV=test jest --runInBand --coverage"
   },
   "keywords": [],
   "author": "",
@@ -11,11 +14,17 @@
   "description": "",
   "dependencies": {
     "amqplib": "^0.10.9",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "mysql2": "^3.15.1",
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.10",
+    "sequelize-cli": "^6.6.3",
+    "sqlite3": "^5.1.7",
+    "supertest": "^7.1.4"
   }
 }
