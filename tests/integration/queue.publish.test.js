@@ -24,6 +24,7 @@ beforeAll(async () => {
       close: closeChannelMock,
     }),
     close: closeConnectionMock,
+    on: jest.fn(),
   });
 
   await initDB();

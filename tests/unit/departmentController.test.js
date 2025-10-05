@@ -5,6 +5,7 @@ const { create, getEmployees } = require("../../src/controllers/departmentContro
 const departmentService = require("../../src/services/departmentService");
 
 jest.mock("../../src/services/departmentService");
+jest.mock("../../src/utils/redisClient");
 
 const app = express();
 app.use(express.json());
@@ -21,6 +22,13 @@ app.use((err, req, res, next) => {
 describe("Department Controller", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Mock redis methods
+    const redis = require("../../src/utils/redisClient");
+    redis.get = jest.fn().mockResolvedValue(null);
+    redis.setex = jest.fn().mockResolvedValue("OK");
+    redis.keys = jest.fn().mockResolvedValue([]);
+    redis.del = jest.fn().mockResolvedValue(0);
   });
 
   describe("POST /departments", () => {
