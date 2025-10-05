@@ -1,4 +1,4 @@
-// src/server.js
+
 const { app, initDB } = require("./app");
 
 initDB().then(() => {

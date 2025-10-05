@@ -1,4 +1,4 @@
-// src/repositories/leaveRepository.js
+
 const { LeaveRequest } = require("../models");
 
 /**

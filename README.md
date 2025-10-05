@@ -7,8 +7,8 @@
 [![Node](https://img.shields.io/badge/node-%3E%3D18-blue)](#)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](#)
 
-A Node.js workforce management system featuring REST APIs, async workers, retry strategies, and >80% automated test coverage.
-Designed for scalability, resilience, and developer clarity.
+A Node.js workforce management system featuring REST APIs, asynchronous RabbitMQ workers, retry strategies, and comprehensive automated tests (~81% coverage).
+Designed for scalability, maintainability, and resilience in high-traffic scenarios.
 
 🚀 Features
 
@@ -20,42 +20,54 @@ Departments
 
 Leave Requests
 
-RabbitMQ Worker for asynchronous leave approvals
+RabbitMQ Worker
 
-Retry Strategies
+Asynchronous processing of leave requests
 
-noRetry, fixedRetry, and exponentialRetry
+Auto-approval logic for short leaves (≤2 days)
+
+Idempotent handling to avoid duplicate updates
+
+Retry strategies: noRetry, fixedRetry, exponentialRetry
 
 Centralized Error Handling
 
-Includes a test-only /error route for validating middleware
+Structured JSON responses for all errors
+
+Test-only /error route for middleware validation
 
 Comprehensive Test Coverage
 
-13 test suites, 21 total tests, ~81% coverage
+19 test suites, 53 tests, all passing
+
+~81% overall coverage
+
+Includes integration tests for APIs and message queue processing
 
 Environment-driven configuration
 
-Uses dotenv for safe secret management
+Uses .env and dotenvx for safe secret management
 
-🧪 Latest Test Summary
-Test Suites: 13 passed, 13 total
-Tests:       21 passed, 21 total
-Snapshots:   0 total
-Time:        6.23 s
-
-📊 Coverage Report
+🧪 Final Test Summary
 Metric	Coverage
 Statements	81.17%
 Branches	60%
 Functions	68%
 Lines	81.77%
 
-✅ Coverage reports are generated automatically after running tests with coverage enabled.
+All tests passed:
+
+Test Suites: 19 passed, 19 total
+Tests:       53 passed, 53 total
+Snapshots:   0 total
+Time:        21.99 s
+
+
+Coverage reports are generated automatically after running tests with --coverage.
 
 🧱 Architecture Overview
 src/
- ├── app.js                  # Express app setup + error handler
+ ├── app.js                  # Express app + centralized error handler
  ├── config/                 # Database & environment configuration
  ├── controllers/            # HTTP request controllers
  ├── migrations/             # Sequelize migration files
@@ -63,41 +75,59 @@ src/
  ├── repositories/           # Data access layer
  ├── routes/                 # API routing definitions
  ├── services/               # Business logic layer
- ├── utils/                  # Utility modules (retry, wrappers)
+ ├── utils/                  # Utility modules (retry strategies, response wrappers)
  └── workers/                # RabbitMQ consumers
+
 tests/
- ├── unit/                   # Unit tests
- └── integration/            # Integration tests
+ ├── unit/                   # Unit tests for services, utils
+ └── integration/            # API + queue integration tests
 
 ⚙️ Installation & Setup
-1. Clone the Repository
-git clone https://github.com/JOULifestyle/workforce-management-system.git
-cd workforce-management
 
-2. Install Dependencies
+Clone the Repository
+
+git clone https://github.com/JOULifestyle/workforce-management-system.git
+cd workforce-management-system
+
+
+Install Dependencies
+
 npm install
 
-3. Create a .env File
+
+Create a .env File
+
 cp .env.example .env
 
-4. Run Database Migrations
+
+Run Database Migrations
+
 npm run migrate
 
-5. Start the API Server
+
+Start the API Server
+
 npm run dev
 
-6. Start the RabbitMQ Worker
+
+Start the RabbitMQ Worker
+
 npm run worker
 
 🧭 Running Tests
-Run all tests
+
+Run all tests:
+
 npm test
 
-Run with coverage
+
+Run with coverage:
+
 npm test -- --coverage
 
 
-Coverage reports are saved to:
+Coverage reports saved to:
+
 /coverage/lcov-report/index.html
 
 🧰 Tech Stack
@@ -115,28 +145,32 @@ npm run worker	Start RabbitMQ consumer
 npm test	Run all Jest tests
 npm test -- --coverage	Generate coverage report
 npm run migrate	Run Sequelize migrations
-npm run lint	Run ESLint for code quality
+npm run lint	Run ESLint
 npm run format	Auto-format with Prettier
 🧾 Example API Endpoints
 Method	Endpoint	Description
 GET	/api/employees	List all employees
 POST	/api/employees	Create an employee
+GET	/api/employees/:id	Get employee details + leave history
 GET	/api/departments	List all departments
-POST	/api/leaves	Submit leave request
-GET	/api/leaves/:id	Retrieve leave request by ID
+POST	/api/departments	Create a department
+POST	/api/leave-requests	Submit leave request
+GET	/api/leave-requests/:id	Retrieve leave request by ID
 🧠 Implementation Highlights
 
-Error Handling Middleware
-Captures exceptions globally and returns structured JSON responses.
+Error Handling Middleware: Captures exceptions globally and returns structured JSON responses.
 
-Retry Strategies (src/utils/retryStrategies.js)
-Implements resilient retry policies (noRetry, fixedRetry, exponentialRetry) with logging and delay backoff.
+Retry Strategies (src/utils/retryStrategies.js): Supports noRetry, fixedRetry, exponentialRetry with logging and delay backoff.
 
-Worker Lifecycle (src/workers/leaveConsumer.js)
-Handles queue messages, gracefully shuts down on interrupts, and manages DLQ (dead-letter queue) scenarios.
+Worker Lifecycle (src/workers/leaveConsumer.js): Gracefully handles RabbitMQ messages, implements DLQ scenarios, and ensures idempotency.
 
-Test Mode Configuration
-/error route exists only under NODE_ENV=test for verifying error propagation.
+Service + Repository Pattern: Separates controllers from business logic and data access for maintainability and scalability.
+
+Test Mode Configuration: /error route exists only under NODE_ENV=test for validating error propagation.
+
+Pagination & Indexing: Ensures database queries scale with large datasets.
+
+Environment-driven: DB URL, RabbitMQ URL, logging levels, and ports all configurable via .env.
 
 🧾 Example .env.example
 # App
@@ -154,15 +188,15 @@ LOG_LEVEL=info
 
 📈 Future Enhancements
 
- Add role-based access control (RBAC)
+Role-based access control (RBAC)
 
- Introduce caching with Redis
+Redis caching for faster lookups
 
- Add Swagger (OpenAPI) documentation
+Swagger/OpenAPI documentation
 
- Dockerize full stack (API + Worker + RabbitMQ)
+Docker Compose for full stack (API + Worker + RabbitMQ)
 
- Setup GitHub Actions for CI/CD pipelines
+CI/CD pipelines via GitHub Actions
 
 🪪 License
 

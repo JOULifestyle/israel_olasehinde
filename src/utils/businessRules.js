@@ -1,4 +1,4 @@
-// src/utils/businessRules.js
+// 
 function parseDate(d) {
   if (d instanceof Date) return d;
   return new Date(d);

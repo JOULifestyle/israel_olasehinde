@@ -10,7 +10,7 @@ const mockAuth = require("../middleware/mockAuth");
 
 const router = express.Router();
 
-// 🧩 Apply mock auth globally for demo (later replace with JWT auth)
+//  Apply mock auth globally for demo (later replace with JWT auth)
 router.use(mockAuth);
 
 // ---------------- DEPARTMENT ----------------

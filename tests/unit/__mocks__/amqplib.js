@@ -1,4 +1,4 @@
-// tests/__mocks__/amqplib.js
+
 const mockChannel = {
   assertQueue: jest.fn().mockResolvedValue(true),
   sendToQueue: jest.fn(),

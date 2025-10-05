@@ -32,14 +32,14 @@ async function autoApproveIfDue(leave) {
  * Applies auto-approval if start date <= 2 days
  */
 exports.createLeaveRequest = async (data) => {
-  // 1️⃣ Save leave in DB
+  //  Save leave in DB
   const leave = await leaveRepository.create(data);
   if (!leave) return null;
 
-  // 2️⃣ Auto-approve if start date is within 2 days
+  //  Auto-approve if start date is within 2 days
   await autoApproveIfDue(leave);
 
-  // 3️⃣ Publish to RabbitMQ (async, non-blocking)
+  //  Publish to RabbitMQ (async, non-blocking)
   try {
     await queue.publishLeave(leave);
   } catch (err) {
@@ -47,7 +47,7 @@ exports.createLeaveRequest = async (data) => {
     leave.publishError = err.message; // optional
   }
 
-  // 4️⃣ Return leave immediately
+  //  Return leave immediately
   return leave;
 };
 
@@ -60,6 +60,22 @@ exports.createLeaveRequest = async (data) => {
 exports.updateLeaveStatus = async (id, newStatus) => {
   try {
     const [updatedRows] = await leaveRepository.updateStatus(id, newStatus);
+    return updatedRows > 0;
+  } catch (err) {
+    console.error("❌ Failed to update leave status:", err.message);
+    throw err;
+  }
+};
+
+/**
+ * Update leave status only if current status is PENDING
+ * @param {number} id - leave ID
+ * @param {string} newStatus - "APPROVED" | "REJECTED"
+ * @returns {boolean} true if updated
+ */
+exports.updateLeaveStatusIfPending = async (id, newStatus) => {
+  try {
+    const [updatedRows] = await leaveRepository.updateStatusIfPending(id, newStatus);
     return updatedRows > 0;
   } catch (err) {
     console.error("❌ Failed to update leave status:", err.message);

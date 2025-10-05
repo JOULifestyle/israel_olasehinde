@@ -9,13 +9,13 @@ exports.create = async (req, res, next) => {
   try {
     const { employeeId, startDate, endDate, departmentId } = req.body;
 
-    // 1️⃣ Validate input
+    //  Validate input
     await validateRequest(createLeaveSchema, req.body);
 
-    // 2️⃣ Create leave request (DB + RabbitMQ async + auto-approve)
-    const leave = await leaveService.createLeaveRequest({ employeeId, startDate, endDate });
+    //  Create leave request (DB + RabbitMQ async + auto-approve)
+    const leave = await leaveService.createLeaveRequest({ employeeId, startDate, endDate, departmentId });
 
-    // 3️⃣ Cache invalidation (async, non-blocking)
+    //  Cache invalidation (async, non-blocking)
     (async () => {
       try {
         const empKey = `employee:${employeeId}`;
@@ -31,7 +31,7 @@ exports.create = async (req, res, next) => {
       }
     })();
 
-    // 4️⃣ Respond immediately
+    //  Respond immediately
     response(res, leave, "Leave request submitted successfully", 201);
   } catch (err) {
     next(err);

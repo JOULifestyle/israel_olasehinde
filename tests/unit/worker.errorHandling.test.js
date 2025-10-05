@@ -1,4 +1,4 @@
-// tests/unit/worker.errorHandling.test.js
+
 jest.mock("amqplib");
 jest.mock("../../src/utils/retryStrategies", () => ({
   exponentialRetry: (fn, opts) => async (msg, onAck, onNack) => {

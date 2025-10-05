@@ -1,11 +1,11 @@
-// tests/unit/leaveService.error.test.js
 
-// 1️⃣ Mock amqplib FIRST — before importing anything else
+
+//  Mock amqplib FIRST — before importing anything else
 jest.mock("amqplib", () => ({
   connect: jest.fn().mockRejectedValue(new Error("rabbit fail")),
 }));
 
-// 2️⃣ Now import dependencies
+//  Now import dependencies
 const { initDB, sequelize, Department, Employee } = require("../../src/models");
 const leaveService = require("../../src/services/leaveService");
 

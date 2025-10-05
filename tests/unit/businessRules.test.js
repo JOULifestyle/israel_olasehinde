@@ -1,4 +1,4 @@
-// tests/unit/businessRules.test.js
+
 const { decideLeaveStatus } = require("../../src/utils/businessRules");
 
 describe("decideLeaveStatus", () => {
