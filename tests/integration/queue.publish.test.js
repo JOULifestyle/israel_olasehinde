@@ -1,3 +1,4 @@
+
 jest.mock("amqplib");
 
 const amqp = require("amqplib");
@@ -37,6 +38,7 @@ test("creating a leave request publishes message to RabbitMQ", async () => {
   // create department
   const depRes = await request(app)
     .post("/api/departments")
+    .set("x-role", "admin")
     .send({ name: "HR" })
     .expect(201);
   const dep = depRes.body.data;
@@ -44,6 +46,7 @@ test("creating a leave request publishes message to RabbitMQ", async () => {
   // create employee
   const empRes = await request(app)
     .post("/api/employees")
+    .set("x-role", "admin")
     .send({ name: "Bob", email: "bob@example.com", departmentId: dep.id })
     .expect(201);
   const emp = empRes.body.data;
@@ -51,17 +54,21 @@ test("creating a leave request publishes message to RabbitMQ", async () => {
   // create leave request
   const leaveRes = await request(app)
     .post("/api/leave-requests")
+    .set("x-role", "admin")
     .send({ employeeId: emp.id, startDate: "2025-10-05", endDate: "2025-10-06" })
     .expect(201);
 
   const leave = leaveRes.body.data;
-  // ensure DB created PENDING leave
+
+  // DB assertions
   expect(leave.status).toBe("PENDING");
 
-  // ensure publish called
-  expect(sendToQueueMock).toHaveBeenCalled();
+  // ensure message published to RabbitMQ
+  expect(sendToQueueMock).toHaveBeenCalledTimes(1);
+
   const [queue, buffer] = sendToQueueMock.mock.calls[0];
   expect(queue).toBe("leave.requested");
+
   const published = JSON.parse(buffer.toString());
   expect(published.id).toBe(leave.id);
 });

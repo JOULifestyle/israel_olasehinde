@@ -1,11 +1,11 @@
 // tests/integration/api.employee.test.js
-const request = require("supertest");
 const { app, initDB } = require("../../src/app");
 const { sequelize } = require("../../src/models");
+const req = require("../../src/utils/testRequest"); // ✅ new helper wrapper
 
 beforeAll(async () => {
   process.env.NODE_ENV = "test";
-  await initDB(); // sync in-memory sqlite
+  await initDB(); // sync in-memory DB
 });
 
 afterAll(async () => {
@@ -14,17 +14,15 @@ afterAll(async () => {
 
 describe("Employee API integration", () => {
   test("create department, create employee, get employee with leaves", async () => {
-    // create department
-    const depRes = await request(app)
-      .post("/api/departments")
+    // ✅ create department (admin role auto applied)
+    const depRes = await req("post", "/api/departments")
       .send({ name: "Engineering" })
       .expect(201);
 
     const dep = depRes.body.data;
 
-    // create employee
-    const empRes = await request(app)
-      .post("/api/employees")
+    // ✅ create employee (admin)
+    const empRes = await req("post", "/api/employees")
       .send({
         name: "Alice",
         email: "alice@example.com",
@@ -35,11 +33,11 @@ describe("Employee API integration", () => {
     const emp = empRes.body.data;
     expect(emp.email).toBe("alice@example.com");
 
-    // get employee
-    const getRes = await request(app).get(`/api/employees/${emp.id}`).expect(200);
+    // ✅ get employee details with leave history
+    const getRes = await req("get", `/api/employees/${emp.id}`).expect(200);
     const returned = getRes.body.data;
+
     expect(returned.email).toBe("alice@example.com");
-    // leave list should be an array (empty)
     expect(Array.isArray(returned.LeaveRequests)).toBe(true);
   });
 });

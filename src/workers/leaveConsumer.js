@@ -8,15 +8,24 @@ let connection = null;
 let channel = null;
 
 /**
- * Process a leave message
+ * Process a leave message (idempotent)
  */
 async function processLeaveMessage(payload) {
   const leaveId = payload.id;
   const existing = await leaveRepository.findById(leaveId);
   if (!existing) return; // message references nonexistent record
-  if (existing.status !== "PENDING") return; // idempotency
+
   const status = decideLeaveStatus(existing.startDate, existing.endDate);
-  await leaveRepository.updateStatus(leaveId, status);
+
+  // idempotent update: only updates if status is PENDING
+  const [updatedRows] = await leaveRepository.updateStatusIfPending(leaveId, status);
+
+  if (updatedRows === 0) {
+    // Already processed, nothing to do
+    console.log(`Leave ${leaveId} already processed, skipping`);
+  } else {
+    console.log(`Leave ${leaveId} status updated to ${status}`);
+  }
 }
 
 /**

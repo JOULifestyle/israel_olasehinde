@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mysql:
     image: mysql:8
-    restart: unless-stopped 
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: workforce
@@ -21,7 +21,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
-    restart: always 
+    restart: always
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -31,13 +31,17 @@ services:
 
   redis:
     image: redis:7
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data
 
   api:
     build:
       context: .
       dockerfile: Dockerfile.api
+    restart: unless-stopped
     environment:
       NODE_ENV: development
       DB_HOST: mysql
@@ -46,6 +50,8 @@ services:
       DB_NAME: workforce
       DB_PORT: 3306
       RABBITMQ_URL: amqp://rabbitmq
+      REDIS_HOST: redis           # ✅ ensure internal hostname is set
+      REDIS_PORT: 6379
     depends_on:
       mysql:
         condition: service_healthy
@@ -55,11 +61,14 @@ services:
         condition: service_started
     ports:
       - "4000:4000"
+    env_file:
+      - .env                     # optional if you have extra vars like JWT keys
 
   worker:
     build:
       context: .
       dockerfile: Dockerfile.worker
+    restart: unless-stopped
     environment:
       NODE_ENV: development
       DB_HOST: mysql
@@ -68,11 +77,16 @@ services:
       DB_NAME: workforce
       DB_PORT: 3306
       RABBITMQ_URL: amqp://rabbitmq
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       mysql:
         condition: service_healthy
       rabbitmq:
         condition: service_started
+      redis:
+        condition: service_started
 
 volumes:
   mysql-data:
+  redis-data:

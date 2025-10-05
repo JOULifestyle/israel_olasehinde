@@ -1,7 +1,5 @@
-// tests/unit/departmentController.test.js
 const request = require("supertest");
 const express = require("express");
-const bodyParser = require("body-parser");
 
 const { create, getEmployees } = require("../../src/controllers/departmentController");
 const departmentService = require("../../src/services/departmentService");
@@ -9,13 +7,13 @@ const departmentService = require("../../src/services/departmentService");
 jest.mock("../../src/services/departmentService");
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
 
 // Routes
 app.post("/departments", create);
 app.get("/departments/:id/employees", getEmployees);
 
-// Error handler to capture errors and send 500
+// Error handler
 app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message });
 });
@@ -64,7 +62,7 @@ describe("Department Controller", () => {
       });
     });
 
-    it("should handle errors", async () => {
+    it("should handle errors properly", async () => {
       departmentService.getEmployees.mockRejectedValue(new Error("DB error"));
 
       const res = await request(app).get("/departments/1/employees");
