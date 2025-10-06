@@ -7,196 +7,246 @@
 [![Node](https://img.shields.io/badge/node-%3E%3D18-blue)](#)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](#)
 
-A Node.js workforce management system featuring REST APIs, asynchronous RabbitMQ workers, retry strategies, and comprehensive automated tests (~81% coverage).
-Designed for scalability, maintainability, and resilience in high-traffic scenarios.
+A Dockerized Node.js workforce management system featuring:
+
+REST APIs for Employees, Departments, and Leave Requests
+
+RabbitMQ worker with asynchronous processing and retry logic
+
+Clean service/repository architecture with error middleware
+
+Robust test suite (~81% coverage across 19 suites)
+
+Built for resilience, maintainability, scalability and testability
+
+Implemented a caching layer, Redis for employee lookups.
+
+A functional role-based access control
+
+
+
+
+🧭 **Reviewer Guide**
+
+This section helps you to quickly explore what matters most:
+
+| Area | Highlights | Where to Look |
+|------|-------------|---------------|
+| **Architecture** | Modular, layered (Controller → Service → Repository) | `/src` folders (`controllers`, `services`, `repositories`) |
+| **Asynchronous Design** | RabbitMQ worker with retry & DLQ logic | `/src/workers/leaveConsumer.js` |
+| **Error Handling** | Centralized middleware, consistent JSON output | `/src/middleware/errorHandler.js` |
+| **Retry Strategies** | `noRetry`, `fixedRetry`, `exponentialRetry` | `/src/utils/retryStrategies.js` |
+| **Tests** | 19 suites, unit + integration, mocks for AMQP | `/tests/unit` and `/tests/integration` |
+| **Docker Setup** | Complete environment (API + Worker + RabbitMQ + DB) | `Dockerfile`, `docker-compose.yml` |
+| **Code Quality** | ESLint, Prettier, Jest coverage integration | `.eslintrc`, `.prettierrc`, `ci.yml` |
+| **Quick Run** | `docker-compose up` to boot everything | Root directory |
+
 
 🚀 Features
 
-RESTful APIs for:
+RESTful CRUD APIs (Employees, Departments, Leave Requests)
 
-Employees
+RabbitMQ Worker with retry and dead-letter support
 
-Departments
+Automatic approval for short leaves (≤2 days)
 
-Leave Requests
+Graceful connection recovery and queue resilience
 
-RabbitMQ Worker
+Consistent error responses and environment-based config
 
-Asynchronous processing of leave requests
-
-Auto-approval logic for short leaves (≤2 days)
-
-Idempotent handling to avoid duplicate updates
-
-Retry strategies: noRetry, fixedRetry, exponentialRetry
-
-Centralized Error Handling
-
-Structured JSON responses for all errors
-
-Test-only /error route for middleware validation
-
-Comprehensive Test Coverage
-
-19 test suites, 53 tests, all passing
-
-~81% overall coverage
-
-Includes integration tests for APIs and message queue processing
-
-Environment-driven configuration
-
-Uses .env and dotenvx for safe secret management
-
-🧪 Final Test Summary
-Metric	Coverage
-Statements	81.17%
-Branches	60%
-Functions	68%
-Lines	81.77%
-
-All tests passed:
-
-Test Suites: 19 passed, 19 total
-Tests:       53 passed, 53 total
-Snapshots:   0 total
-Time:        21.99 s
-
-
-Coverage reports are generated automatically after running tests with --coverage.
-
-🧱 Architecture Overview
+Over 80% Jest test coverage with CI + Codecov integration
+```
+📁 Architecture Overview
 src/
- ├── app.js                  # Express app + centralized error handler
- ├── config/                 # Database & environment configuration
- ├── controllers/            # HTTP request controllers
- ├── migrations/             # Sequelize migration files
+ ├── app.js                  # Express app + error middleware
+ ├── config/                 # DB & environment setup
+ ├── controllers/            # Request handlers
+ ├── migrations/             # Sequelize migrations
  ├── models/                 # Sequelize models
- ├── repositories/           # Data access layer
- ├── routes/                 # API routing definitions
- ├── services/               # Business logic layer
- ├── utils/                  # Utility modules (retry strategies, response wrappers)
+ ├── repositories/           # Data access logic
+ ├── routes/                 # API routes
+ ├── services/               # Business logic
+ ├── utils/                  # Retry strategies, response helpers
  └── workers/                # RabbitMQ consumers
 
 tests/
- ├── unit/                   # Unit tests for services, utils
- └── integration/            # API + queue integration tests
-
-⚙️ Installation & Setup
-
-Clone the Repository
-
-git clone https://github.com/JOULifestyle/workforce-management-system.git
+ ├── unit/                   # Service and utility unit tests
+ └── integration/            # End-to-end & queue integration tests
+```
+⚙️ Setup & Installation
+```
+1. Clone
+git clone https://github.com/JOULifestyle/israel_olasehinde.git
 cd workforce-management-system
-
-
-Install Dependencies
-
-npm install
-
-
-Create a .env File
-
+```
+```
+2. Environment Setup
 cp .env.example .env
-
-
-Run Database Migrations
-
+```
+```
+3. Local Migration (optional)
 npm run migrate
+```
+🐳 Run with Docker (Recommended)
 
+The project is fully containerized — this runs the API, Worker, RabbitMQ, and PostgreSQL automatically.
+```
+docker-compose build
+docker-compose up
+```
 
-Start the API Server
+Then visit:
 
-npm run dev
+API: http://localhost:4000
 
+RabbitMQ UI: http://localhost:15672
 
-Start the RabbitMQ Worker
+(user: guest, password: guest)
 
-npm run worker
+🧩 Example docker-compose.yml
+```
+version: "3.9"
+services:
+  api:
+    build: .
+    container_name: workforce_api
+    command: npm run dev
+    ports:
+      - "4000:4000"
+    depends_on:
+      - rabbitmq
+      - db
+    env_file:
+      - .env
 
-🧭 Running Tests
+  worker:
+    build: .
+    container_name: workforce_worker
+    command: npm run worker
+    depends_on:
+      - rabbitmq
+      - db
+    env_file:
+      - .env
 
-Run all tests:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
 
+  db:
+    image: postgres:14
+    container_name: workforce_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: workforce
+    ports:
+      - "5432:5432"
+```
+🧪 Running Tests
+```
 npm test
-
-
-Run with coverage:
-
+```
+```
+With coverage:
+```
+```
 npm test -- --coverage
+```
 
+Coverage report available in:
+```
+coverage/lcov-report/index.html
+```
 
-Coverage reports saved to:
+✅ Summary
 
-/coverage/lcov-report/index.html
+📊 **Coverage Metrics**
 
+| Metric | Coverage |
+|---------|-----------|
+| **Statements** | 80.43% |
+| **Branches** | 63.43% |
+| **Functions** | 65.43% |
+| **Lines** | 82.07% |
+
+```
+All tests passing:
+
+Test Suites: 19 passed, 19 total
+Tests:       53 passed, 53 total
+```
 🧰 Tech Stack
-Layer	Technology
-Backend	Node.js + Express
-ORM	Sequelize (SQLite/PostgreSQL)
-Messaging	RabbitMQ
-Testing	Jest + Supertest
-Environment	Dotenv + dotenvx
-Code Quality	ESLint + Prettier
-🧩 Scripts
-Script	Description
-npm run dev	Start API in development mode
-npm run worker	Start RabbitMQ consumer
-npm test	Run all Jest tests
-npm test -- --coverage	Generate coverage report
-npm run migrate	Run Sequelize migrations
-npm run lint	Run ESLint
-npm run format	Auto-format with Prettier
-🧾 Example API Endpoints
-Method	Endpoint	Description
-GET	/api/employees	List all employees
-POST	/api/employees	Create an employee
-GET	/api/employees/:id	Get employee details + leave history
-GET	/api/departments	List all departments
-POST	/api/departments	Create a department
-POST	/api/leave-requests	Submit leave request
-GET	/api/leave-requests/:id	Retrieve leave request by ID
+🧰 **Tech Stack**
+
+| Layer | Technology |
+|--------|-------------|
+| **Backend** | Node.js + Express |
+| **ORM** | MySQL (Sequelize) |
+| **Messaging** | RabbitMQ |
+| **Testing** | Jest + Supertest |
+| **Environment** | dotenv + dotenvx |
+| **Code Quality** | ESLint + Prettier |
+
+🧾 Example Endpoints
+🧾 **Example API Endpoints**
+
+| Method | Endpoint | Description |
+|---------|-----------|-------------|
+| **POST** | `/api/departments` | Create a department |
+| **POST** | `/api/employees` | Create new employee |
+| **GET** | `api/departments/:id/employees?page=2&limit=20` (you can adjust the figures based on the length you want)| List employees in a department (paginated). |
+| **GET** | `/api/employees/:id` | Get employee details + leave history |
+| **POST** | `/api/leave-requests` | Submit leave request |
+| **PATCH** | `api/leave-requests/:id/approve` | Approve leave request by ID (Admin only) |
+| **PATCH** | `api/leave-requests/:id/reject` | Reject leave request by ID (Admin only) |
+| **GET** | `/api/health` | Health Check |
+
 🧠 Implementation Highlights
 
-Error Handling Middleware: Captures exceptions globally and returns structured JSON responses.
+Centralized error middleware
 
-Retry Strategies (src/utils/retryStrategies.js): Supports noRetry, fixedRetry, exponentialRetry with logging and delay backoff.
+Configurable retry strategies
 
-Worker Lifecycle (src/workers/leaveConsumer.js): Gracefully handles RabbitMQ messages, implements DLQ scenarios, and ensures idempotency.
+Resilient RabbitMQ message consumer
 
-Service + Repository Pattern: Separates controllers from business logic and data access for maintainability and scalability.
+Layered Service + Repository design
 
-Test Mode Configuration: /error route exists only under NODE_ENV=test for validating error propagation.
+Fully Dockerized for CI/CD environments
 
-Pagination & Indexing: Ensures database queries scale with large datasets.
-
-Environment-driven: DB URL, RabbitMQ URL, logging levels, and ports all configurable via .env.
+Test-ready with mocked AMQP and integration queues
 
 🧾 Example .env.example
 # App
 PORT=4000
 NODE_ENV=development
 
-# Database
-DB_URL=sqlite::memory:
 
 # RabbitMQ
-RABBITMQ_URL=amqp://localhost
+RABBITMQ_URL=amqp://guest:guest@localhost:5672
 
 # Logging
 LOG_LEVEL=info
 
-📈 Future Enhancements
 
-Role-based access control (RBAC)
+## 🧭 Key Points
 
-Redis caching for faster lookups
+If you’re reviewing this project, check out:
 
-Swagger/OpenAPI documentation
+🧱 System Design → src/workers/, src/utils/retryStrategies.js
 
-Docker Compose for full stack (API + Worker + RabbitMQ)
+🔄 Async Reliability → RabbitMQ reconnects, retry strategies
 
-CI/CD pipelines via GitHub Actions
+🧩 Test Engineering → tests/unit/leaveService.test.js, tests/integration/
+
+🧪 Mocks & Isolation → Custom Jest mocks for amqplib
+
+🐳 Deployment Ready Setup → Dockerfile + docker-compose
+
+🧠 Code Clarity & Maintainability → service/repo layering & clean interfaces
 
 🪪 License
 
